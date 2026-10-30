@@ -9,9 +9,11 @@ from starlette.responses import FileResponse
 from src.files.config import UFILES_DIR
 
 
-FilesRouter = APIRouter()
+FilesRouter = APIRouter(
+    prefix="/files",
+)
 
-@FilesRouter.post("/files/upload")
+@FilesRouter.post("/upload")
 async def upload_file(ufiles: list[UploadFile]):
     id_for_files = hashlib.md5(str(time.time()).encode("utf-8")).hexdigest()
     directory = UFILES_DIR / id_for_files
