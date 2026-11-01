@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Request
 
 from src.users.schemas import UserCreate, UserIn
+from users.jwt import create_jwt
 
 UsersRouter = APIRouter(
     prefix="/users",
@@ -8,9 +9,8 @@ UsersRouter = APIRouter(
 
 @UsersRouter.post("/registration", tags=["registration"])
 async def registration(data: UserCreate, request: Request):
-    print(data.username)
-    print(data.password)
-    print(data.email)
+    user_id =
+    create_jwt()
     return {"status": "200"}
 
 @UsersRouter.post("/login", tags=["login"])
