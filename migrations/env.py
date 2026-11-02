@@ -7,6 +7,7 @@ from sqlalchemy.engine import make_url
 
 from src.config import DATABASE_URL
 from src.database.base import Base
+from src.users.models import User, Role
 
 
 config = context.config
