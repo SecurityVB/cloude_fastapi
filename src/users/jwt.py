@@ -43,7 +43,7 @@ def create_jwt(user_id: int) -> str:
     message = f"{header_encoded}.{payload_encoded}"
 
     signature = hmac.new(
-        SECRET_KEY,
+        SECRET_KEY.encode("utf-8"),
         message.encode("ascii"),
         hashlib.sha256
     ).digest()
@@ -68,7 +68,7 @@ def verify_jwt(token: str) -> dict:
         message = f"{header_part}.{payload_part}"
 
         expected_signature = hmac.new(
-            SECRET_KEY,
+            SECRET_KEY.encode("utf-8"),
             message.encode("ascii"),
             hashlib.sha256
         ).digest()
