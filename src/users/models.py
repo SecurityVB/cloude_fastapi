@@ -16,6 +16,9 @@ class User(Base):
     password: Mapped[str] = mapped_column(
         String(255)
     )
+    directory: Mapped[str] = mapped_column(
+        String(255), unique=True
+    )
     role: Mapped[str] = mapped_column(
         ForeignKey("roles.name"), default="default"
     )

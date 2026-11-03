@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Request, Response, status
 import hashlib
 
+from catalogs.utils import create_directory
 from src.database.database import Session
 from src.users.schemas import UserCreate, UserIn
 
@@ -24,10 +25,13 @@ async def registration(
         data.password.encode("utf-8")
     ).hexdigest()
 
+    directory = await create_directory()
+
     user = User(
         username=data.username,
         email=data.email,
-        password=password_hash
+        password=password_hash,
+        directory=directory
     )
     session.add(user)
     await session.commit()
