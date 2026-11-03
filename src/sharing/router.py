@@ -6,11 +6,11 @@ from zipfile import ZipFile, ZIP_DEFLATED
 from fastapi import APIRouter, UploadFile
 from starlette.responses import FileResponse
 
-from src.files.config import UFILES_DIR
+from src.sharing.config import UFILES_DIR
 
 
 FilesRouter = APIRouter(
-    prefix="/files",
+    prefix="/sharing",
 )
 
 @FilesRouter.post("/upload")
@@ -34,11 +34,10 @@ async def upload_file(ufiles: list[UploadFile]):
                     shutil.copyfileobj(ufile.file, archive_file)
 
     return {
-        "status": True,
-        "id": id_for_files,
+        "status": "200",
     }
 
-@FilesRouter.get("/files/download/{id}")
+@FilesRouter.get("/download/{id}")
 async def get_files(id: str):
     directory = UFILES_DIR / id
     file_path = next(directory.iterdir())
