@@ -1,5 +1,4 @@
 from logging.config import fileConfig
-from pathlib import Path
 
 from alembic import context
 from sqlalchemy import create_engine, pool
@@ -13,8 +12,6 @@ from src.users.models import User, Role
 config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
-
-project_root = Path(__file__).resolve().parent.parent
 
 url = make_url(DATABASE_URL)
 url = url.set(drivername='postgresql+psycopg')

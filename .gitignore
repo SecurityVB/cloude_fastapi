@@ -3,4 +3,4 @@
 __pycache__
 ufiles
 .env
-migrations/versions/*
+src/migrations/versions/*
