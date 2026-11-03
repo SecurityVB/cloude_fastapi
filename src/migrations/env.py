@@ -5,8 +5,9 @@ from sqlalchemy import create_engine, pool
 from sqlalchemy.engine import make_url
 
 from src.config import DATABASE_URL
-from src.database.base import Base
+from src.database.database import Base
 from src.users.models import User, Role
+from src.catalogs.models import File
 
 
 config = context.config
