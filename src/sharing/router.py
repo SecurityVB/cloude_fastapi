@@ -1,9 +1,10 @@
 import hashlib
 import shutil
 import time
+from typing import Annotated
 from zipfile import ZipFile, ZIP_DEFLATED
 
-from fastapi import APIRouter, UploadFile
+from fastapi import APIRouter, File, UploadFile
 from starlette.responses import FileResponse
 
 from src.sharing.config import UFILES_DIR
@@ -11,10 +12,16 @@ from src.sharing.config import UFILES_DIR
 
 FilesRouter = APIRouter(
     prefix="/sharing",
+    tags=["sharing"]
 )
 
 @FilesRouter.post("/upload")
-async def upload_file(ufiles: list[UploadFile]):
+async def upload_file(
+    ufiles: Annotated[
+        list[UploadFile],
+        File(json_schema_extra={"items": {"type": "string", "format": "binary"}}),
+    ],
+):
     id_for_files = hashlib.md5(str(time.time()).encode("utf-8")).hexdigest()
     directory = UFILES_DIR / id_for_files
     if len(ufiles) <= 1:

@@ -1,6 +1,7 @@
 .venv
 .idea
 __pycache__
-ufiles
+src/sharing/ufiles/*
 .env
 src/migrations/versions/*
+src/catalogs/ucatalogs/*

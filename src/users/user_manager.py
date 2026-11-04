@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends, Cookie, HTTPException
+from fastapi import Depends, Request, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.users.jwt import verify_jwt
@@ -9,10 +9,11 @@ from src.users.models import User
 
 
 async def get_current_user(
-    access_token: Annotated[str | None, Cookie()] = None,
-    session: AsyncSession = Depends(get_session)
+    request: Request,
+    session: AsyncSession = Depends(get_session),
 ) -> User:
 
+    access_token = request.cookies.get("access_token")
     if access_token is None:
         raise HTTPException(401, "Не авторизован")
 

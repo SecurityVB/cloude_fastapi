@@ -11,10 +11,11 @@ from src.users.service import set_auth_cookie
 
 UsersRouter = APIRouter(
     prefix="/users",
+    tags=["users"]
 )
 
 
-@UsersRouter.post("/registration", status_code=status.HTTP_201_CREATED, tags=["registration"])
+@UsersRouter.post("/registration", status_code=status.HTTP_201_CREATED)
 async def registration(
         data: UserCreate,
         request: Request,
@@ -39,12 +40,12 @@ async def registration(
     set_auth_cookie(response, request, user.id)
     return {"status": "200"}
 
-@UsersRouter.get("/login", tags=["login"])
+@UsersRouter.get("/login")
 async def login_info():
     return {"detail": "Для входа отправьте username и password в JSON на POST /users/login"}
 
 
-@UsersRouter.post("/login", tags=["login"])
+@UsersRouter.post("/login")
 async def login(
         data: UserIn,
         request: Request,
