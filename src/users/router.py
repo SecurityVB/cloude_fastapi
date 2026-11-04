@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Request, Response, status
 import hashlib
 
-from catalogs.utils import create_directory
+from src.catalogs.utils import create_directory
 from src.database.database import Session
 from src.users.schemas import UserCreate, UserIn
 
@@ -38,6 +38,11 @@ async def registration(
 
     set_auth_cookie(response, request, user.id)
     return {"status": "200"}
+
+@UsersRouter.get("/login", tags=["login"])
+async def login_info():
+    return {"detail": "Для входа отправьте username и password в JSON на POST /users/login"}
+
 
 @UsersRouter.post("/login", tags=["login"])
 async def login(

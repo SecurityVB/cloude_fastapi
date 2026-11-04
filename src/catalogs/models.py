@@ -10,7 +10,7 @@ class File(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     filename: Mapped[str] = mapped_column(String(255))
     server_filename: Mapped[str] = mapped_column(String(255))
-    catalog: Mapped[str] = mapped_column(String(255))
+    path: Mapped[str] = mapped_column(String(550))
     owner: Mapped[int] = mapped_column(
         ForeignKey("users.id")
     )

@@ -1,10 +1,12 @@
+import os
 from uuid import uuid4
-from fastapi import APIRouter, UploadFile
+from fastapi import APIRouter, UploadFile, Request
 
 from src.database.database import Session
 from src.catalogs.models import File
 from src.catalogs.config import UCATALOGS_DIR
 from src.users.user_manager import CurrentUser
+from src.users.service import check_auth
 
 
 CatalogsRouter = APIRouter(
@@ -12,14 +14,16 @@ CatalogsRouter = APIRouter(
 )
 
 
-# add a decorator that checks the user for authentication and authorization
-@CatalogsRouter.get("/upload", tags=["catalogs"]) # add param - choice of directory for files
-async def get_directories(
+@check_auth()
+@CatalogsRouter.get("/upload/{path}", tags=["catalogs"])
+async def get_files(
+        request: Request,
         ufiles: list[UploadFile],
+        path: str,
         user: CurrentUser,
         session: Session
 ):
-    directory = UCATALOGS_DIR / user.directory
+    directory = UCATALOGS_DIR / user.directory / path
     for ufile in ufiles:
         file = ufile.file
         filename = uuid4().hex
@@ -41,9 +45,15 @@ async def get_directories(
         "status": "200"
     }
 
-# add a decorator that checks the user for authentication and authorization
-@CatalogsRouter.get("/get", tags=["catalogs"]) # add param - choice of directory for files
+@check_auth()
+@CatalogsRouter.get("/get/{path}", tags=["catalogs"])
 async def get_content(
+        request: Request,
+        path: str,
         user: CurrentUser,
 ):
-    pass
+    answer = [file for _, _, file in os.walk(UCATALOGS_DIR / user.directory / path)]
+    return {
+        "status": "200",
+        "files": "".join(answer)
+    }

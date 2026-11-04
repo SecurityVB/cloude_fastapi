@@ -1,6 +1,6 @@
 from uuid import uuid4
 
-from catalogs.config import UCATALOGS_DIR
+from src.catalogs.config import UCATALOGS_DIR
 
 
 async def create_directory() -> str:
