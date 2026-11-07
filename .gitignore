@@ -3,5 +3,4 @@
 __pycache__
 src/sharing/ufiles/*
 .env
-src/migrations/versions/*
 src/catalogs/ucatalogs/*

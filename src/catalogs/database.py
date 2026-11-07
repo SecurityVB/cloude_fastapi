@@ -1,7 +1,8 @@
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.catalogs.models import File
+from src.users.database import update_user_storage_usage
 
 
 async def get_filename(
@@ -16,3 +17,14 @@ async def get_filename(
     if file is None:
         return None
     return file.filename
+
+
+async def db_delete_files(
+    files: list[str], user_id: int, deleted_bytes: int, session: AsyncSession
+) -> None:
+    if files:
+        await session.execute(
+            delete(File).where(File.owner == user_id, File.server_filename.in_(files))
+        )
+        await update_user_storage_usage(user_id, -deleted_bytes, session)
+        await session.commit()

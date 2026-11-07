@@ -3,10 +3,12 @@ from uuid import uuid4
 from fastapi import APIRouter, UploadFile, Request
 from fastapi import File as UploadField
 
-from src.catalogs.utils import get_filenames
+from catalogs.database import db_delete_files
+from src.catalogs.utils import delete_files, get_filenames
 from src.database.database import Session
 from src.catalogs.models import File
 from src.catalogs.config import UCATALOGS_DIR
+from src.users.database import update_user_storage_usage
 from src.users.user_manager import CurrentUser
 from src.users.service import check_auth
 
@@ -30,22 +32,35 @@ async def get_files(
         session: Session
 ):
     directory = UCATALOGS_DIR / user.directory / path if path != "/" else UCATALOGS_DIR / user.directory
-    for ufile in ufiles:
-        file = ufile.file
-        filename = uuid4().hex
+    directory.mkdir(parents=True, exist_ok=True)
+    created = []
+    total_bytes = 0
+    try:
+        for ufile in ufiles:
+            filename = uuid4().hex
+            destination = directory / filename
+            with destination.open("xb") as output:
+                created.append(destination)
+                while chunk := await ufile.read(1024 * 1024):
+                    output.write(chunk)
+                size_bytes = output.tell()
 
-        directory.mkdir(parents=True, exist_ok=True)
-        with open(directory / filename, 'wb') as f:
-            f.write(file.read())
+            total_bytes += size_bytes
+            session.add(File(
+                filename=ufile.filename,
+                server_filename=filename,
+                size_bytes=size_bytes,
+                path=f"{user.directory}/{path}" if path != "/" else user.directory,
+                owner=user.id,
+            ))
 
-        _file = File(
-            filename=ufile.filename,
-            server_filename=filename,
-            path=f"{user.directory}/{path}" if path!="/" else user.directory,
-            owner=user.id
-        )
-        session.add(_file)
+        await update_user_storage_usage(user.id, total_bytes, session)
         await session.commit()
+    except BaseException:
+        await session.rollback()
+        for destination in created:
+            destination.unlink(missing_ok=True)
+        raise
 
     return {
         "status": "200"
@@ -66,3 +81,15 @@ async def get_content(
         "status": "200",
         "files": answer
     }
+
+
+@CatalogsRouter.post("/delete", tags=["catalogs"])
+@check_auth()
+async def delete_content(
+        request: Request,
+        path: str,
+        user: CurrentUser,
+        session: Session,
+):
+    files = await delete_files(path, user, session)
+    return {"status": "200", "deleted_count": len(files)}
