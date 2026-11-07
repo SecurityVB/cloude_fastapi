@@ -6,7 +6,6 @@ from fastapi.responses import RedirectResponse
 from src.users.jwt import TOKEN_LIFETIME, create_jwt, verify_jwt
 
 
-# request: Request - a mandatory parameter — in the first position in every function
 def check_auth():
     def decorator(endpoint):
         @wraps(endpoint)

@@ -41,7 +41,7 @@ async def get_files(
         _file = File(
             filename=ufile.filename,
             server_filename=filename,
-            path=f"{user.directory}/{path}" if path else user.directory,
+            path=f"{user.directory}/{path}" if path!="/" else user.directory,
             owner=user.id
         )
         session.add(_file)
