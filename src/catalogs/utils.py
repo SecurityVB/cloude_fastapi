@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.concurrency import run_in_threadpool
 
-from src.catalogs.database import db_delete_files, get_filename
+from src.catalogs.database import db_delete_files, get_file_by_server_name
 from src.catalogs.models import File
 from src.users.models import User
 from src.catalogs.config import UCATALOGS_DIR
@@ -21,39 +21,50 @@ async def create_directory() -> str:
     return name_directory
 
 
-async def get_filenames(path, session: AsyncSession) -> list[str]:
+def catalog_path(user: User, path: str) -> Path:
+    root = UCATALOGS_DIR / user.directory
+    if path == "/":
+        return root
+    relative = Path(path)
+    if relative.is_absolute() or not relative.parts or ".." in relative.parts:
+        raise HTTPException(400, "Укажи путь внутри своего каталога")
+    return root / relative
+
+
+async def get_filenames(path: Path, session: AsyncSession) -> list[str]:
     answer = []
     for item in path.iterdir():
         if item.is_file():
-            filename = await get_filename(item.name, session)
-            if filename:
-                answer.append(
-                    filename
-                )
+            file = await get_file_by_server_name(item.name, session)
+            if file:
+                answer.append(file.filename)
         else:
             answer.append(item.name)
     return answer
 
 
-async def delete_files(path: str, user: User, session: AsyncSession) -> list[str]:
+async def delete_files(path: str, user: User, session: AsyncSession, file_id: int | None = None) -> list[str]:
     root = UCATALOGS_DIR / user.directory
     relative = Path(path)
-    if path != "/" and (relative.is_absolute() or not relative.parts or ".." in relative.parts):
-        raise HTTPException(400, "Укажи путь внутри своего каталога")
-
-    target = root if path == "/" else root / relative
+    target = catalog_path(user, path)
+    await session.execute(select(User.id).where(User.id == user.id).with_for_update())
 
     try:
-        if target == root:
+        if file_id is None and target == root:
             targets = list(root.iterdir())
-        elif target.is_dir():
+        elif file_id is None and target.is_dir():
             targets = [target]
         else:
-            rows = await session.execute(select(File.server_filename, File.path).where(
+            query = select(File.server_filename, File.path).where(
                 File.owner == user.id, File.filename == relative.name,
-            ))
-            parent = Path(user.directory) / relative.parent
+            )
+            if file_id is not None:
+                query = query.where(File.id == file_id)
+            rows = await session.execute(query)
+            parent = target.parent.relative_to(UCATALOGS_DIR)
             targets = [target.with_name(name) for name, folder in rows if Path(folder) == parent]
+            if len(targets) > 1:
+                raise HTTPException(409, "В этой папке несколько файлов с таким именем")
             if not targets:
                 raise HTTPException(404, "Файл или каталог не найден")
 
